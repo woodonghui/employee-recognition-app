@@ -1,0 +1,18 @@
+<h1>{{#__}}Sign up{{/__}}</h1>
+<div>
+
+	{{#errors.email}}
+	<div class="error">{{errors.email.message}}</div>
+	{{/errors.email}}
+
+	<form name="signup" action="{{poe_link}}" method="post">
+		
+		<div class="form-group has-error">
+			<input type="text" value="{{email}}" name="email" class="form-control" placeholder="Email" />
+        </div>
+
+        <!-- <a class="btn btn-primary btn-lg btn-block" href="#">Submit</a> -->
+        <div class="medium primary btn"><button type="submit">Submit</button></div>
+		
+	</form>
+</div>

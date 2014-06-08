@@ -1,0 +1,19 @@
+<h1>log in</h1>
+
+{{#error}}
+<div class="error">{{message}}</div>
+{{/error}}
+
+<form name="login" action="/login" method="post">
+	
+	<div class="form-group">
+		<input type="text" value="{{email}}" name="email" class="form-control" placeholder="Email" />
+	</div>
+
+	<div class="form-group">
+		<input type="password" value="{{password}}" name="password" class="form-control" placeholder="Password" />
+	</div>
+
+	<div class="medium primary btn"><button type="submit">Login</button></div>
+		
+</form>

@@ -1,0 +1,1 @@
+define("app/signup/main-signup",["jquery","gumby","gumbynavbar","jqueryvalidation"],function(e){e(function(){e("#signup form").validation({required:[{name:"name"},{name:"email",validate:function(e){return e.val().match("@")!==null}}],fail:function(){}})})});

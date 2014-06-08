@@ -1,0 +1,19 @@
+{
+	"Hello": "Welcome to p2pAppreciate website",
+	"Sign up": "Sign up",
+	"Hello %s, how are you today?": "Hello %s, how are you today?",
+	"weekend": "weekend",
+	"Hello %s, how are you today? How was your %s.": "Hello %s, how are you today? How was your %s.",
+	"Hi": "Hi",
+	"Howdy": "Howdy",
+	"%s cat": {
+		"one": "%s cat",
+		"other": "%s cats"
+	},
+	"There is one monkey in the %%s": {
+		"one": "There is one monkey in the %%s",
+		"other": "There are %d monkeys in the %%s"
+	},
+	"tree": "tree",
+	"common.register.invalidlink": "Opps! It seems like your registration link is invalid. Please sign up first if you have not signed up yet."
+}
