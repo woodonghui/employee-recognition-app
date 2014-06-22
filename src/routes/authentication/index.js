@@ -1,33 +1,43 @@
 var _ = require('../../utils/underscore');
-// var crypto = require("crypto");
-// var signup = require('../../models/signup');
-var user = require('../../models/user');
+
+var User = require('../../models/user');
+
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 
+passport.serializeUser(function(user, done) {
+	done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+	User.findById(id, function(err, user){
+		if(err) { return done(err); }
+		if(user) {return done(null, user); }
+	});
+});
 
 passport.use(new LocalStrategy(
 	{
 		usernameField: 'email',
 		passwordField: 'password',
 	},
+
 	function(email, password, done) {
 
-		return done(null, false, {message: 'Incorrect username.' });
-
-		// user.findOne({ email: email }, function(err, user) {
-		// 	if (err) { return done(err); }
-		// 	if (!user) {
-		// 	return done(null, false, { message: 'Incorrect username.' });
-		// 	}
-		// 	if (!user.validPassword(password)) {
-		// 	return done(null, false, { message: 'Incorrect password.' });
-		// 	}
-		// 	return done(null, user);
-		// });
+		User.findOne({email: email}, function(err, user) {
+			if (err) { return done(err); }
+			if (!user) {
+				return done(null, false, { message: 'Incorrect username.' });
+			}
+			if (!(user.password === password)) {
+				return done(null, false, { message: 'Incorrect password.' });
+			}
+			return done(null, user);
+		});
 	}
 
 ));
+
 
 module.exports = function(app) {
 	
@@ -40,19 +50,27 @@ module.exports = function(app) {
 
 		if (_.isEmpty(req.body.email) || _.isEmpty(req.body.password)) {
 			res.render('authentication/login', {
-				error: true,
-				message: "Please input your credential."
+				email: req.body.email,
+				password: req.body.password,
+				errors: {message: "Please input your credential."}
 			});
 		}
 		else {
 			passport.authenticate('local', function(err, user, info) {
 				if (err) { return next(err); }
 				if (!user) {
-					console.log(info);
+					// console.log(info);
 					res.render('authentication/login', {
-						error: true,
-						message: info.message
+						email: req.body.email,
+						password: req.body.password,
+						errors: {message: info.message}
 					});
+				} else {
+					req.logIn(user, function(err) {
+						if (err) { return next(err); }
+						return res.redirect('/');
+					});
+					// res.redirect('/');
 				}
 
 			})(req, res, next);
@@ -60,9 +78,11 @@ module.exports = function(app) {
 	});
 
 
-	app.get('/logout', function(req, res, next) {
-		
+	app.get('/logout', function(req, res) {
+		req.logout();
+		res.redirect('/');
 	});
+
 
 };
 

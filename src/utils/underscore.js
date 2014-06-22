@@ -9,7 +9,33 @@ _.mixin({
 
 	isSomeEmpty: function(arr) {
 		return _.some(arr, _.isEmpty);
-	}
+	},
+
+  parseValidationErrors: function(err) {
+    /*{ message: 'Validation failed',
+      name: 'ValidationError',
+      errors: 
+       { 'name.last': 
+          { message: 'Last Name is required!',
+            name: 'ValidatorError',
+            path: 'name.last',
+            type: 'required',
+            value: '' },
+         'name.first': 
+          { message: 'First Name is required!',
+            name: 'ValidatorError',
+            path: 'name.first',
+            type: 'required',
+            value: '' },
+         password: 
+          { message: 'Password should only contain letters and numbers!',
+            name: 'ValidatorError',
+            path: 'password',
+            type: 'user defined',
+            value: '!@##$' } } }
+    */
+    return _.values(err.errors);
+  }
 
   // compactObject : function(o) {
   // 	_.each(o, function(v, k){

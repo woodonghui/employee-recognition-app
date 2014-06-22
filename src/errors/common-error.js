@@ -1,6 +1,8 @@
-function CommonError(message) {
-  this.name = "CommonError";
-  this.message = message || "CommonError";
+var mapping = require('./mapping');
+
+function CommonError(name) {
+  this.name = name;
+  this.message = mapping.getMessage(name) || name;
 }
 CommonError.prototype = new Error();
 CommonError.prototype.constructor = CommonError;

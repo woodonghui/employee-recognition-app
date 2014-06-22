@@ -15,5 +15,5 @@
 		"other": "There are %d monkeys in the %%s"
 	},
 	"tree": "tree",
-	"common.register.invalidlink": "common.register.invalidlink"
+	"invalid register link.": "注册链接无效！"
 }

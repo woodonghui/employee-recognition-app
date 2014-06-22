@@ -15,5 +15,5 @@
 		"other": "There are %d monkeys in the %%s"
 	},
 	"tree": "tree",
-	"common.register.invalidlink": "Opps! It seems like your registration link is invalid. Please sign up first if you have not signed up yet."
+	"invalid register link.": "Opps! It seems like your registration link is invalid. Please sign up first if you have not signed up yet."
 }

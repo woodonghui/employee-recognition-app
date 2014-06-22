@@ -1,4 +1,7 @@
 var mongoose = require ("mongoose");
+var Q = require('q');
+var util = require('util');
+var shortId = require('shortid');
 
 var schema = new mongoose.Schema({
 	uri: {type: String, trim: true, lowercase: true, required: true },
@@ -6,17 +9,57 @@ var schema = new mongoose.Schema({
 	committed: {type: Boolean, required: true, default: false}
 });
 
-// schema.statics.isCommitted = function (uri, guid, callback){
-// 	model.findOne({ uri: uri, guid: guid, committed: false }, function(err, doc){
-// 		if (err) return callback(err, false);
-// 		else if(doc){
-// 			return callback(null, doc);
-// 		} else {
-// 			return callback(null, null);
-// 		}
+schema.statics.createQ = function (uri) {
+	var deferred = Q.defer();
+	var poe = new this({
+		uri: uri,
+		guid: shortId.generate()
+	});
+
+	poe.save(function(err, result){
+		if (err) {
+	        deferred.reject(new Error(err));
+	    } else {
+	        deferred.resolve(result);
+	    }
+	});
+	return deferred.promise;
+};
+
+
+schema.statics.seekQ = function (uri, guid) {
+	var deferred = Q.defer();
+
+	this.findOneAndUpdate(
+		{uri: uri, guid: guid, committed: false}, 
+		{committed: true}, 
+		function(err, result){
+			if (err) {
+		        deferred.reject(new Error(err));
+		    } else {
+		        deferred.resolve(result);
+		    }
+	});
+
+	return deferred.promise;
+};
+
+// schema.methods.save_q = function () {
+// 	var deferred = Q.defer();
+// 	this.save(function(err, result){
+// 		if (err) {
+// 	        deferred.reject(new Error(err));
+// 	    } else {
+// 	        deferred.resolve(result);
+// 	    }
 // 	});
+// 	return deferred.promise;
 // };
 
-var model = mongoose.model('PoeLinks', schema);
+schema.virtual('poelink').get(function () {
+  return util.format('%s/%s', this.uri, this.guid);
+});
 
-module.exports = model;
+var PoeLink = mongoose.model('PoeLink', schema);
+
+module.exports = PoeLink;

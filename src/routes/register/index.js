@@ -1,97 +1,118 @@
 var _ = require('../../utils/underscore');
-// var crypto = require("crypto");
-var signup = require('../../models/signup');
-var user = require('../../models/user');
+var Signup = require('../../models/signup');
+var User = require('../../models/user');
+
+var PoeLink = require('../../models/poe-links');
 
 var i18n = require('i18n');
-var CommonError = require('../../errors/common-error');
 var GlobalError = require('../../errors/global-error');
 
 var Q = require('q');
+var mongoose = require('mongoose-q')(require('mongoose'));
 
 
 module.exports = function(app) {
 	
+	/*GET /register page */
 	app.get('/register', function(req, res, next) {
 
 		Q.fcall(function(){
-			if(_.isEmpty(req.query)) throw new GlobalError(404);
-			return req.query;
+			if(_.isEmpty(req.query) 
+				|| _.isEmpty(req.query.email) 
+				|| _.isEmpty(req.query.invitation_code)) 
+				throw new GlobalError("Invalid registration link");
+			else
+				return Signup.findOneQ({
+					email: req.query.email, 
+					invitation_code: req.query.invitation_code, 
+					registered: false});
 		})
-		.then(function(query){
-			if(_.isEmpty(query.email) || _.isEmpty(query.invitation_code)) 
-				throw new CommonError('common.register.invalidlink');
-			return query;
-		})
-		.then(function(query){
-			res.render('register/index', query);
+		.then(function(signup){
+            if(!signup) throw new GlobalError("Invalid registration link");
+            else return signup;
+        })
+        .then(function(signup){
+        	return [PoeLink.createQ('/register'), signup]
+        })
+		.spread(function(poe, signup){
+			res.render('register/index', {email: signup.email, poelink: poe.poelink});
 		})
 		.fail(function(err){
-			if (err instanceof GlobalError) next(err);
-			//TODO: handle req.xhr
-			else {
-				res.render('alert', {
-					error: {message: res.__(err.message)}
-				});
-			}
+			next(err);	
 		});
-		
 	});
 
-	app.post('/register', function(req, res) {
 
-		var form = {
-			invitation_code: req.body.invitation_code,
-			email: req.body.email,
-			password: req.body.password,
-			name: {
-				first: req.body.name.first,
-				middle: req.body.name.middle,
-				last: req.body.name.last
-			},
-			country: req.body.country
-		};
+	app.post('/register/:poe', function(req, res, next) {
+		
+		// var form = {
+		// 	email: req.body.email,
+		// 	password: req.body.password,
+		// 	name: {
+		// 		first: req.body.name.first,
+		// 		middle: req.body.name.middle,
+		// 		last: req.body.name.last
+		// 	},
+		// 	country: req.body.country
+		// };
 
-		if (!_.isEmail(form.email) || _.isSomeEmpty([form.password, form.name.first, form.name.last, form.country])) {
-			
-			if(req.xhr) {
-				res.send(_.extend(form, {
-					error: true,
-					message: "Please fill in completed information."
-				}));
+		var form = req.body;
+
+		// check whether register post link valid
+		PoeLink.seekQ('/register', req.params.poe)
+        .then(function(poe){
+        	if(!poe) throw new GlobalError('Invalid register post link');
+        	else return poe;
+        })
+
+        // check whether email already exists
+        .then(function(poe){
+        	if(_.isEmpty(req.body.email))
+        		throw new GlobalError('Error when registration');
+        	else
+        		return User.ifExistQ(req.body.email);
+        })
+
+        // save user
+        .then(function(result){
+        	if(result) throw new GlobalError('User already exists');
+        	else { 
+	        	var user = new User(form);
+	        	return user.saveQ();
+	        }
+        })
+
+        // render view
+        .then(function(user){
+        	console.log(user);
+        	// if (req.xhr) { res.json({message: 'success'}); } 
+         	// else 
+            res.render('success', {message: 'Register successfully'});
+        })
+        .fail(function(err){
+        	// console.log(err);
+        	if(err.name === 'ValidationError') {
+
+        		PoeLink.createQ('/register')
+                .then(function(poe) {
+                    if (req.xhr) { res.json(poe); } //res.json(err.errors); 
+                    else {
+                        res.render('register/index', {
+                            errors: _.parseValidationErrors(err),
+                            email: req.body.email,
+                            form: form,
+                            poelink: poe.poelink
+                        });
+                    }
+                })
+                .fail(function(err){
+                    return next(err);
+                })
+                .done();
 			}
-			else {
-				res.render('register/index', _.extend(form, {
-					error: true,
-					message: "Please fill in completed information."
-				}));
-			}
-		}
-		else {
-			// validate email and invitation code against signup collection
-			signup.isValid(form.email, form.invitation_code, function(err, valid){
-				if (err) next(err);
-				else if(!valid) {
-					res.render('register/index', _.extend(form, {
-						error: true,
-						hideform: true,
-						message: "Opps! It seems like your registration link is invalid."
-					}));		
-				}
-				else {
-					var doc = new user(form);
-					doc.save(function(err, saved_doc){
-						if (err) next(err);
-						else {
-							console.log(saved_doc);
-							res.redirect('/');
-						}
-					});
-				}
-			});
-		}
-
-		// res.render('register/index', req.body);
+			else next(err);
+        }).done();
+		
 	});
 
 };

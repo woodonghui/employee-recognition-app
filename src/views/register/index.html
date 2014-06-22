@@ -1,33 +1,36 @@
 <h1>register the programme</h1>
 
-{{#error}}
-<div class="error" style="color: red;">{{message}}</div>
-{{/error}}
 
-<form name="register" action="/register" method="post">
+{{#errors}}
+	<div class="error">{{message}}</div>
+{{/errors}}
+
+
+
+<form name="register" action="{{poelink}}" method="post">
 	
 	<div class="form-group">
-		<input type="hidden" value="{{email}}" name="email" class="form-control" placeholder="Email" />
+		<input type="text" value="{{email}}" name="email" class="form-control" readonly />
 	</div>
 
 	<!-- hidden field -->
-	<div class="form-group"> 
+	<!-- <div class="form-group"> 
 		<input type="hidden" value="{{invitation_code}}" name="invitation_code" class="form-control" />
+	</div> -->
+
+	<div class="form-group">
+		<input type="password" value="{{form.password}}" name="password" class="form-control" placeholder="Password" />
 	</div>
 
 	<div class="form-group">
-		<input type="password" value="{{password}}" name="password" class="form-control" placeholder="Password" />
-	</div>
-
-	<div class="form-group">
-		<input type="text" value="{{name.first}}" name="name[first]" class="form-control" placeholder="First Name" />
-		<input type="text" value="{{name.middle}}" name="name[middle]" class="form-control" placeholder="Middle Name" />
-		<input type="text" value="{{name.last}}" name="name[last]" class="form-control" placeholder="Last Name" />
+		<input type="text" value="{{form.name.first}}" name="name[first]" class="form-control" placeholder="First Name" />
+		<input type="text" value="{{form.name.middle}}" name="name[middle]" class="form-control" placeholder="Middle Name" />
+		<input type="text" value="{{form.name.last}}" name="name[last]" class="form-control" placeholder="Last Name" />
 	</div>
 
 	
 	<div class="form-group">
-		<input type="text" value="{{country}}" name="country" class="form-control" placeholder="Country" />
+		<input type="text" value="{{form.country}}" name="country" class="form-control" placeholder="Country" />
 	</div>
 	
 	<div class="medium primary btn"><button type="submit">Submit</button></div>

@@ -1,7 +1,9 @@
 var mongoose = require ("mongoose");
+// var Q = require("q");
+
 var validate = require('mongoose-validator').validate;
 
-emailValidator = validate({message: "invalid email address..."}, 'isEmail');
+var emailValidator = validate({message: "invalid email address..."}, 'isEmail');
 
 var schema = new mongoose.Schema({
 	email: {type: String, trim: true, lowercase: true, required: 'Email is required!', validate: emailValidator },
@@ -10,17 +12,19 @@ var schema = new mongoose.Schema({
 	registered: {type: Boolean, default: false}
 });
 
-var model = mongoose.model('Signup', schema);
 
-model.isValid = function isValid(email, invitation_code, callback){
-	model.findOne({ email: email.trim().toLowerCase(), invitation_code: invitation_code.trim() }, function(err, doc){
-		if (err) return callback(err, false);
-		else if(doc){
-			return callback(null, true);
-		} else {
-			return callback(null, false);
-		}
-	});
-};
+// schema.methods.save_q = function () {
+// 	var deferred = Q.defer();
+// 	this.save(function(err, result){
+// 		if (err) {
+// 	        deferred.reject(new Error(err));
+// 	    } else {
+// 	        deferred.resolve(result);
+// 	    }
+// 	});
+// 	return deferred.promise;
+// };
 
-module.exports = model;
+var SignUp = mongoose.model('SignUp', schema);
+
+module.exports = SignUp;

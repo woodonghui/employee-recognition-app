@@ -1,68 +1,49 @@
+var GlobalError = require('../../errors/global-error');
 var _ = require('../../utils/underscore');
 var util = require('util');
 var shortId = require('shortid');
 
-var crypto = require("crypto");
-var Poe = require('../../models/poe-links');
+var PoeLink = require('../../models/poe-links');
 var SignUp = require('../../models/signup');
 var mailer = require('../../utils/mailer');
 
-// var errors = require('../../errors');
 var mongoose = require('mongoose-q')(require('mongoose'));
 
-
 module.exports = function(app) {
-	
-	app.get('/signup', function(req, res, next) {
-        
-        var poe = new Poe({
-            uri: '/signup',
-            guid: shortId.generate()
-        });
 
-        poe.saveQ()
-        .then(function(result){
-            if (req.xhr) { res.json(result); } 
+	/*GET /signup page*/
+	app.get('/signup', function(req, res, next) {        
+        PoeLink.createQ('/signup')
+        .then(function(poe){
+            if (req.xhr) { res.json(poe); } 
             else {
-                res.render('signup/index', {
-                    poe_link: util.format('/signup/%s', result.guid)
-                });
+                res.render('signup/index', { poelink: poe.poelink });
             }
         })
         .fail(function(err){
             return next(err);
         })
         .done();
-
 	});
 
 
-	app.post('/signup/:guid', function(req, res, next) {        
-        //validate poe-link
-        var poe, signup;
-        Poe.findOneQ({ uri: '/signup', guid: req.params.guid, committed: false })
-        .then(function(result){
-            if(!result || result.committed) {
-                throw new Error('400');
-            } else {
-                poe = result;
-                return result;
-            }
+    /*POST /signup/:poe */
+	app.post('/signup/:poe', function(req, res, next) {
+        PoeLink.seekQ('/signup', req.params.poe)
+        .then(function(poe){
+            if(!poe) throw new GlobalError('Invalid post link');
+            else return poe;
         })
         .then(function(poe){
-            signup = new SignUp({
+            var signup = new SignUp({
                 email: req.body.email,
                 invitation_code: shortId.generate()
             });
-            return [signup.saveQ(), poe];
+            return signup.saveQ();
         })
-        .spread(function(result_signup, result_poe){
-            result_poe.committed = true;
-            return [result_signup, result_poe.saveQ()];
-        })
-        .spread(function(result, result_poe){
+        .then(function(result){
             // sent notification email
-            // console.log(result, result_poe);
+            // TODO: Emit event, Event Manager to trigger the event email
             var mailto = result.email;
             var template_content = [{
                 "name": "url",
@@ -92,6 +73,7 @@ module.exports = function(app) {
             else res.render('signup/success', {email: result.email}); 
         })
         .fail(function(err){
+            // console.log(err);
             if(err.name == 'ValidationError') {
 
                 /******************************
@@ -106,19 +88,26 @@ module.exports = function(app) {
                         type: 'user defined',
                         value: 'abc' } } }
                 *********************************/
-
-                if (req.xhr) { res.json(err.errors); }
-                else 
-                res.render('signup/index', {
-                    errors: err.errors,
-                    email: signup.email,
-                    poe_link: util.format('/signup/%s', poe.guid)
-                });
+                
+                PoeLink.createQ('/signup')
+                .then(function(poe){
+                    if (req.xhr) { res.json(poe); } //res.json(err.errors); 
+                    else {
+                        res.render('signup/index', {
+                            errors: err.errors,
+                            email: req.body.email,
+                            poelink: poe.poelink
+                        });
+                    }
+                })
+                .fail(function(err){
+                    return next(err);
+                })
+                .done();
 
             } else return next(err);
         })
         .done();
     });
-
 
 };

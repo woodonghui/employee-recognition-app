@@ -24,7 +24,11 @@ module.exports = function(grunt) {
 				options: {
 					reporter: 'spec'
 				},
-				src: ['test/selenium/**/*.js']
+				/* the tests of models will open the mongodb connection */
+				/* and there's no need to open and close the connection on each request */
+				/* leave it open until the tests end */
+				src: ['test/model/**/*.js' ,'test/functional/**/*.js']
+				// src: ['test/functional/db-test.js', 'test/functional/user-signup-test.js']
 			}
 	    },
 
