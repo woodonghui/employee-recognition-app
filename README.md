@@ -1,4 +1,4 @@
-A employee recognition application
+An employee recognition application
 ===========
 
 
